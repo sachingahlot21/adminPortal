@@ -1,5 +1,5 @@
 import { useState } from "react";
-
+import axios from 'axios';
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -8,17 +8,16 @@ export default function AdminLogin() {
     e.preventDefault();
 
     try {
-      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const res = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/admin/login`,
+        { email, password }
+      );
 
-      const data = await res.json();
-
-      if (data.success) {
+      console.log(res)
+      const data = res.data;
+      if (data) {
         localStorage.setItem("adminToken", data.token);
-        window.location.href = "/admin/dashboard";
+        window.location.href = "/";
       } else {
         alert(data.message);
       }
