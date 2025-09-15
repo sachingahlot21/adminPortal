@@ -5,3 +5,4 @@ export default function ProtectedRoute() {
   
   return token ? <Outlet /> : <Navigate to="/admin/login" />;
 }
+

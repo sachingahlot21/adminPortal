@@ -9,6 +9,7 @@ import { Route, RouterProvider, createBrowserRouter, createRoutesFromElements } 
 
 import ManageBills from './components/ManageBills.jsx'
 import ManageOrders from './components/ManageOrders.jsx'
+import  AuthProvider  from './context/AuthContext.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -27,6 +28,10 @@ const router = createBrowserRouter(
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <AuthProvider>
+      <RouterProvider router={router} />
+    </AuthProvider>
   </StrictMode>,
 )
+
+
