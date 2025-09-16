@@ -5,12 +5,14 @@ import { useNavigate } from "react-router-dom";
 
 
 
+
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth
+  const navigate = useNavigate();
+  
+  const {accessToken,login} = useContext(AuthContext);
 
-  const {accessToken} = useContext(AuthContext);
   // const handleLogin = async (e) => {
   //   e.preventDefault();
 
@@ -37,9 +39,10 @@ export default function AdminLogin() {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate("/"); // redirect to dashboard/layout
+      navigate("/"); 
     } catch (err) {
-      alert("Login failed: " + err.response?.data?.message || err.message);
+      console.error("Login error:", err);
+      alert("Login failed: " + (err.response?.data?.message || err.message));
     }
   };
 
@@ -66,7 +69,7 @@ export default function AdminLogin() {
           required
         />
 
-        <button className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+        <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
           Login
         </button>
       </form>

@@ -1,7 +1,8 @@
-import { useAuth } from "../context/AuthContext"
+import { AuthContext } from "../context/AuthContext"
+import { useContext } from "react";
 
 export const useApi = () => {
-  const { accessToken, logout, api } = useAuth();
+  const { accessToken, logout, api } = useContext(AuthContext);
 
   const apiFetch = async (url, options = {}) => {
     try {
