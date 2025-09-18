@@ -1,4 +1,4 @@
-import React, { createContext, useState, useEffect, useContext, useRef } from "react";
+import React, { createContext, useState, useEffect, useContext, useRef, useLayoutEffect } from "react";
 import axios from "axios";
 
 export const AuthContext = React.createContext()
@@ -12,42 +12,104 @@ const AuthProvider = ({ children }) => {
   const [accessToken, setAccessToken] = useState(null);
   const [user, setUser] = useState(null);
   const [initializing, setInitializing] = useState(true);
+  const [isLoggedOut, setIsLoggedOut] = useState(false);
 
 
   const accessTokenRef = useRef(null);
   const refreshPromiseRef = useRef(null);
+  const refreshCancel = useRef(false);
 
   useEffect(() => {
     accessTokenRef.current = accessToken;
   }, [accessToken]);
 
   // Attach interceptors once
-  useEffect(() => {
-    // Request interceptor: attach Authorization if available
+  // useEffect(() => {
+  //   // Request interceptor: attach Authorization if available
+  //   const reqI = api.interceptors.request.use(config => {
+  //     const token = accessTokenRef.current;
+  //     if (token) config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+  //     return config;
+  //   }, err => Promise.reject(err));
+
+  //   // Response interceptor: on 401 try refresh -> retry original request
+  //   const resI = api.interceptors.response.use(
+  //     res => res,
+  //     async error => {
+  //       const originalRequest = error.config;
+  //       if (!originalRequest) return Promise.reject(error);
+
+  //       // avoid infinite loops
+  //       if (error.response && error.response.status === 401 && !originalRequest._retry) {
+  //         originalRequest._retry = true;
+
+  //         try {
+
+  //           if (!refreshPromiseRef.current) {
+  //             refreshPromiseRef.current = api.post("/admin/refresh")
+  //               .then(r => {
+  //                 const newToken = r.data.accessToken;
+  //                 setAccessToken(newToken);
+  //                 refreshPromiseRef.current = null;
+  //                 return newToken;
+  //               })
+  //               .catch(err => {
+  //                 refreshPromiseRef.current = null;
+  //                 throw err;
+  //               });
+  //           }
+
+  //           const newToken = await refreshPromiseRef.current;
+  //           originalRequest.headers = originalRequest.headers || {};
+  //           originalRequest.headers.Authorization = `Bearer ${newToken}`;
+  //           return api(originalRequest);
+  //         } catch (e) {
+  //           setAccessToken(null);
+  //           setUser(null);
+  //           return Promise.reject(e);
+  //         }
+  //       }
+
+  //       return Promise.reject(error);
+  //     }
+  //   );
+
+  //   // cleanup on unmount
+  //   return () => {
+  //     api.interceptors.request.eject(reqI);
+  //     api.interceptors.response.eject(resI);
+  //   };
+  // }, []);
+
+  useLayoutEffect(() => {
     const reqI = api.interceptors.request.use(config => {
       const token = accessTokenRef.current;
-      if (token) config.headers = { ...config.headers, Authorization: `Bearer ${token}` };
+      if (token) config.headers.Authorization = `Bearer ${token}`;
       return config;
-    }, err => Promise.reject(err));
+    });
 
-    // Response interceptor: on 401 try refresh -> retry original request
     const resI = api.interceptors.response.use(
       res => res,
       async error => {
         const originalRequest = error.config;
         if (!originalRequest) return Promise.reject(error);
 
-        // avoid infinite loops
-        if (error.response && error.response.status === 401 && !originalRequest._retry) {
+        if (
+          error.response?.status === 401 &&
+          !originalRequest._retry &&
+          !isLoggedOut
+        ) {
           originalRequest._retry = true;
 
           try {
-            // If a refresh is already in progress, reuse its promise
             if (!refreshPromiseRef.current) {
-              refreshPromiseRef.current = api.post("/api/auth/refresh")
-                .then(r => {
-                  const newToken = r.data.accessToken;
+              refreshPromiseRef.current = api
+                .post("/admin/refresh")
+                .then(res => {
+                  if (refreshCancel.current || isLoggedOut) return null;
+                  const newToken = res.data.accessToken;
                   setAccessToken(newToken);
+                  setUser(res.data.user);
                   refreshPromiseRef.current = null;
                   return newToken;
                 })
@@ -58,15 +120,14 @@ const AuthProvider = ({ children }) => {
             }
 
             const newToken = await refreshPromiseRef.current;
-            // set header and retry
-            originalRequest.headers = originalRequest.headers || {};
+            if (!newToken) throw new Error("Refresh cancelled");
+
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return api(originalRequest);
-          } catch (e) {
-            // refresh failed -> clear auth and optionally redirect
+          } catch (err) {
             setAccessToken(null);
             setUser(null);
-            return Promise.reject(e);
+            return Promise.reject(err);
           }
         }
 
@@ -74,34 +135,49 @@ const AuthProvider = ({ children }) => {
       }
     );
 
-    // cleanup on unmount
     return () => {
       api.interceptors.request.eject(reqI);
       api.interceptors.response.eject(resI);
     };
-  }, []); // run once
+  }, [isLoggedOut]);
 
   useEffect(() => {
-    const refreshToken = async () => {
+    refreshCancel.current = false;
+    if (isLoggedOut) {
+      setInitializing(false);
+      return;
+    }
+
+    const refresh = async () => {
       try {
         const res = await api.post("/admin/refresh");
+        if (refreshCancel.current || isLoggedOut)
+        return;
+
         setAccessToken(res.data.accessToken);
-      } 
-      catch (err) {
-        console.log("No refresh token or invalid.");
-      }
-      finally {
+        setUser(res.data.user);
+      } catch (err) {
+        if (refreshCancel.current || isLoggedOut)
+        return;
+        setAccessToken(null);
+        setUser(null);
+      } finally {
         setInitializing(false);
       }
     };
-    refreshToken();
-  }, []);
+
+    refresh();
+    return () => {
+      refreshCancel.current = true;
+    };
+  }, [isLoggedOut]);
 
   const login = async (email, password) => {
     const res = await api.post("/admin/login", { email, password });
     console.log(res.data);
     setAccessToken(res.data.accessToken);
     setUser(res.data.admin);
+    setIsLoggedOut(false);
     return res.data.admin;
   };
 
@@ -110,15 +186,19 @@ const AuthProvider = ({ children }) => {
     try {
       await api.post("/admin/logout");
     } catch (err) {
-      console.log("error occured!" , err)
+      console.log("error occured!", err)
     } finally {
+      setIsLoggedOut(true);
       setAccessToken(null);
       setUser(null);
+
+      refreshCancel.current = true;
+      window.location.replace("/admin/login");
     }
   };
 
   return (
-    <AuthContext.Provider value={{ accessToken, user, login, logout, api,initializing  }}>
+    <AuthContext.Provider value={{ accessToken, user, login, logout, api, initializing }}>
       {children}
     </AuthContext.Provider>
   );

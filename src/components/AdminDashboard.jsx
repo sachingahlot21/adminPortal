@@ -1,7 +1,14 @@
+import { useState, useContext } from "react";
+import axios from 'axios';
+import  {AuthContext}  from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
 export default function AdminDashboard() {
+
+  const {logout} = useContext(AuthContext)
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    window.location.href = "/admin/login";
+    logout()
   };
 
   return (

@@ -2,6 +2,7 @@ import { useState, useContext } from "react";
 import axios from 'axios';
 import  {AuthContext}  from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 
 
@@ -10,6 +11,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+   const location = useLocation();
   
   const {accessToken,login} = useContext(AuthContext);
 
@@ -39,7 +41,8 @@ export default function AdminLogin() {
     e.preventDefault();
     try {
       await login(email, password);
-      navigate("/"); 
+      const redirectPath = location.state?.from?.pathname || "/";
+      window.location.replace(redirectPath);
     } catch (err) {
       console.error("Login error:", err);
       alert("Login failed: " + (err.response?.data?.message || err.message));
