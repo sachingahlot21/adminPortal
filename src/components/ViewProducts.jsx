@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { FaTrash, FaEdit, FaEye, FaMinus, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
-
+import initialProducts from "../data/initialProducts";
 const sampleCategories = [
   "True Wireless Earbuds",
   "Personalised Products",
@@ -18,54 +18,54 @@ const sampleCategories = [
   "Power Banks",
 ];
 
-const initialProducts = [
-  {
-    id: "neckBands2",
-    name: "Rockerz 255 Pro+",
-    description: "40 Hours Playback, 10mm Drivers, boAt Signature Sound",
-    category: "Neckbands",
-    rating: "4.8",
-    sold: 427,
-    price: 1299,
-    priceBefore: 3990,
-    discount: "67% off",
-    stock: 20,
-    status: "available",
-    colors: [
-      {
-        colorName: "Black",
-        images: [
-          "https://picsum.photos/200/200?random=2",
-          "https://picsum.photos/200/200?random=3",
-        ],
-      },
-      {
-        colorName: "Blue",
-        images: [
-          "https://picsum.photos/200/200?random=4",
-          "https://picsum.photos/200/200?random=5",
-        ],
-      },
-    ],
-  },
-  {
-    id: "earbuds1",
-    name: "Wireless Earbuds X1",
-    description: "Crystal Clear Sound, Long Battery Life",
-    category: "True Wireless Earbuds",
-    rating: "4.5",
-    sold: 320,
-    price: 2999,
-    priceBefore: 4999,
-    discount: "40% off",
-    stock: 15,
-    status: "available",
-    colors: [
-      { colorName: "White", images: ["https://picsum.photos/200/200?random=7"] },
-      { colorName: "Black", images: ["https://picsum.photos/200/200?random=8"] },
-    ],
-  },
-];
+// const initialProducts = [
+//   {
+//     id: "neckBands2",
+//     name: "Rockerz 255 Pro+",
+//     description: "40 Hours Playback, 10mm Drivers, boAt Signature Sound",
+//     category: "Neckbands",
+//     rating: "4.8",
+//     sold: 427,
+//     price: 1299,
+//     priceBefore: 3990,
+//     discount: "67% off",
+//     stock: 20,
+//     status: "available",
+//     colors: [
+//       {
+//         colorName: "Black",
+//         images: [
+//           "https://picsum.photos/200/200?random=2",
+//           "https://picsum.photos/200/200?random=3",
+//         ],
+//       },
+//       {
+//         colorName: "Blue",
+//         images: [
+//           "https://picsum.photos/200/200?random=4",
+//           "https://picsum.photos/200/200?random=5",
+//         ],
+//       },
+//     ],
+//   },
+//   {
+//     id: "earbuds1",
+//     name: "Wireless Earbuds X1",
+//     description: "Crystal Clear Sound, Long Battery Life",
+//     category: "True Wireless Earbuds",
+//     rating: "4.5",
+//     sold: 320,
+//     price: 2999,
+//     priceBefore: 4999,
+//     discount: "40% off",
+//     stock: 15,
+//     status: "available",
+//     colors: [
+//       { colorName: "White", images: ["https://picsum.photos/200/200?random=7"] },
+//       { colorName: "Black", images: ["https://picsum.photos/200/200?random=8"] },
+//     ],
+//   },
+// ];
 
 const ViewProducts = () => {
   const navigate = useNavigate();
@@ -116,12 +116,11 @@ const ViewProducts = () => {
 
   return (
     <div className="p-6">
-      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-gray-700">Products</h2>
         <div className="flex gap-2">
           <button
-            onClick={() => navigate("/add-product")}
+            onClick={() => navigate("/admin/products/add")}
             className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2"
           >
             Add Product
@@ -129,7 +128,6 @@ const ViewProducts = () => {
         </div>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-4">
         <input
           type="text"
@@ -152,7 +150,6 @@ const ViewProducts = () => {
         </select>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto border rounded shadow-sm">
         <table className="min-w-full bg-white">
           <thead className="bg-gray-100">
@@ -204,11 +201,9 @@ const ViewProducts = () => {
         </table>
       </div>
 
-      {/* Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
           <div className="bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6">
-            {/* View Modal */}
             {modalType === "view" && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
@@ -262,7 +257,6 @@ const ViewProducts = () => {
               </div>
             )}
 
-            {/* Edit Modal will come here */}
           </div>
         </div>
       )}

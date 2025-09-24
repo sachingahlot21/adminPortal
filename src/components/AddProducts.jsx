@@ -491,7 +491,6 @@ export default function AddProduct() {
           </div>
         </div>
 
-        {/* Submit */}
         <div className="pt-4 border-t">
           <button className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Save Product</button>
           <button
