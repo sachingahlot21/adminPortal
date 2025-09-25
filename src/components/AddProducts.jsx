@@ -29,17 +29,15 @@ export default function AddProduct() {
     category: "",
     rating: "",
     sold: "",
-    priceBefore: "", // original price
-    discount: "", // numeric percent
-    price: "", // computed final price
+    priceBefore: "",
+    discount: "",
+    price: "",
     offer: "none",
-    usp: "",
-    usp2: "",
-    usp3: "",
-    thumbnail: null, // single thumbnail file
+    usps: [""],
+    thumbnail: null,
     stock: 0,
     availability: "In Stock",
-    colors: [], // each: { colorName: '', images: [File, ...] }
+    colors: [],
     count: 0,
   });
 
@@ -108,20 +106,33 @@ export default function AddProduct() {
   };
 
   // Handle color image(s) uploaded for a color
-  const handleColorImageUpload = (index, fileList) => {
-    if (!fileList) return;
-    const files = Array.from(fileList);
-    setForm((p) => {
-      const colors = [...p.colors];
-      const current = colors[index].images || [];
-      if (current.length + files.length > 5) {
-        alert("Max 5 images allowed per color.");
-        return p;
-      }
-      colors[index].images = [...current, ...files];
-      return { ...p, colors };
-    });
+  // const handleColorImageUpload = (index, fileList) => {
+
+  //   console.log(fileList , index)
+  //    console.log(form)
+  //   if (!fileList) return;
+  //   const files = Array.from(fileList);
+  //   console.log("files" , files)
+  //   setForm((p) => {
+  //     const colors = [...p.colors];
+  //     const current = colors[index].images || [];
+  //     console.log("current" , current)
+  //     if (current.length + files.length > 5) {
+  //       alert("Max 5 images allowed per color.");
+  //       return p;
+  //     }
+  //     colors[index].images = [...current, ...files];
+  //     return { ...p, colors };
+  //   });
+  // };
+
+  const handleColorImageUpload = (idx, files) => {
+    const newColors = [...form.colors];
+    const images = Array.from(files);
+    newColors[idx].images = [...newColors[idx].images, ...images].slice(0, 5); // max 5
+    setForm((prev) => ({ ...prev, colors: newColors }));
   };
+
 
   const removeColorImage = (colorIndex, imgIndex) => {
     setForm((p) => {
@@ -171,6 +182,26 @@ export default function AddProduct() {
     alert("Product prepared. Check console for the product object.");
     navigate("/admin/products/view"); // go back to product list
   };
+
+  const handleUspChange = (index, value) => {
+    const newUsps = [...form.usps];
+    newUsps[index] = value;
+    setForm({ ...form, usps: newUsps });
+  };
+
+  const addUspField = () => {
+    if (form.usps.length < 3) {
+      setForm({ ...form, usps: [...form.usps, ""] });
+    }
+  };
+
+  const removeUspField = (index) => {
+    if (form.usps.length > 1) {
+      const newUsps = form.usps.filter((_, i) => i !== index);
+      setForm({ ...form, usps: newUsps });
+    }
+  };
+
 
   // ---------- Render ----------
   return (
@@ -346,29 +377,46 @@ export default function AddProduct() {
         </div>
 
         {/* USPs */}
-        <div className="grid md:grid-cols-3 gap-4">
-          <input
-            name="usp"
-            value={form.usp}
-            onChange={handleChange}
-            placeholder="USP 1 (e.g. 40 Hours Playback)"
-            className="w-full border p-2 rounded"
-          />
-          <input
-            name="usp2"
-            value={form.usp2}
-            onChange={handleChange}
-            placeholder="USP 2"
-            className="w-full border p-2 rounded"
-          />
-          <input
-            name="usp3"
-            value={form.usp3}
-            onChange={handleChange}
-            placeholder="USP 3"
-            className="w-full border p-2 rounded"
-          />
+        {/* USP Section */}
+        <div className="mt-4">
+          <h3 className="text-lg font-semibold mb-2">Unique Selling Points (USPs)</h3>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            {form.usps.map((usp, index) => (
+              <div key={index} className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={usp}
+                  onChange={(e) => handleUspChange(index, e.target.value)}
+                  placeholder={`USP ${index + 1}`}
+                  className="w-full border p-2 rounded"
+                />
+                {form.usps.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeUspField(index)}
+                    className="px-2 py-1 bg-red-500 text-white rounded"
+                  >
+                    -
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Add USP Button */}
+          {form.usps.length < 3 && (
+            <button
+              type="button"
+              onClick={addUspField}
+              className="mt-2 px-3 py-1 bg-green-500 text-white rounded"
+            >
+              + Add USP
+            </button>
+          )}
         </div>
+
+
 
         {/* offer + count */}
         <div className="grid md:grid-cols-2 gap-4">
@@ -383,7 +431,7 @@ export default function AddProduct() {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block mb-1 font-medium">Count</label>
             <input
               name="count"
@@ -392,17 +440,49 @@ export default function AddProduct() {
               onChange={handleChange}
               className="w-full border p-2 rounded"
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Thumbnail (single) */}
         <div>
-          <label className="block mb-1 font-medium">Thumbnail Image (single)</label>
-          <input type="file" accept="image/*" onChange={handleThumbnailUpload} />
+          <label className="block mb-2 font-medium">Thumbnail Image</label>
+
+          {/* Show preview only if image exists */}
           {form.thumbnail && (
-            <p className="mt-2 text-sm text-green-600">Selected: {form.thumbnail.name}</p>
+            <div className="relative w-40 h-40 border rounded flex items-center justify-center overflow-hidden bg-gray-50">
+              <img
+                src={URL.createObjectURL(form.thumbnail)}
+                alt="Thumbnail Preview"
+                className="w-full h-full object-cover"
+              />
+
+              {/* Remove Button */}
+              <button
+                type="button"
+                onClick={() => setForm({ ...form, thumbnail: null })}
+                className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-700"
+                title="Remove image"
+              >
+                ×
+              </button>
+            </div>
           )}
+
+          {/* Upload / Change Button */}
+          <label className="mt-3 inline-block">
+            <span className="px-4 py-2 bg-blue-600 text-white rounded cursor-pointer hover:bg-blue-700">
+              {form.thumbnail ? "Change Image" : "Select Image"}
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleThumbnailUpload}
+              className="hidden"
+            />
+          </label>
         </div>
+
+
 
         {/* Colors section */}
         <div>

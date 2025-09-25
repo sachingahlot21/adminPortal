@@ -13,6 +13,7 @@ import ManageOrders from './components/ManageOrders.jsx'
 import AuthProvider from './context/AuthContext.jsx'
 import ViewProducts from './components/ViewProducts.jsx'
 import AddProduct from './components/AddProducts.jsx'
+import EditProduct from './components/EditProduct.jsx'
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -32,6 +33,7 @@ const router = createBrowserRouter(
           <Route path='admin/manage-bills' element={<ManageBills />} />
           <Route path='/admin/products/view' element={<ViewProducts />} />
           <Route path='/admin/products/add' element={<AddProduct />} />
+          <Route path="/admin/products/edit/:id" element={<EditProduct />} />
         </Route>
       </Route>
     </>

@@ -2,21 +2,9 @@ import React, { useState } from "react";
 import { FaTrash, FaEdit, FaEye, FaMinus, FaPlus } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import initialProducts from "../data/initialProducts";
-const sampleCategories = [
-  "True Wireless Earbuds",
-  "Personalised Products",
-  "Neckbands",
-  "Smart Watches",
-  "Wireless Headphones",
-  "Wireless Speakers",
-  "Wired Headphones",
-  "Wired Earphones",
-  "Soundbars",
-  "Gaming Series",
-  "Party Speakers",
-  "Chargers",
-  "Power Banks",
-];
+import sampleCategories from "../data/sampleCategories";
+
+
 
 // const initialProducts = [
 //   {
@@ -77,14 +65,14 @@ const ViewProducts = () => {
 
   const filteredProducts = products.filter(
     (p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
+      p.itemName.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (filterCategory === "" || p.category === filterCategory)
   );
 
   // Delete product
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this product?")) {
-      setProducts(products.filter((p) => p.id !== id));
+      setProducts(products.filter((p) => p.productid !== id));
     }
   };
 
@@ -109,7 +97,7 @@ const ViewProducts = () => {
   const handleUpdate = (e) => {
     e.preventDefault();
     setProducts((prev) =>
-      prev.map((p) => (p.id === selectedProduct.id ? selectedProduct : p))
+      prev.map((p) => (p.id === selectedProduct.productid ? selectedProduct : p))
     );
     closeModal();
   };
@@ -166,11 +154,11 @@ const ViewProducts = () => {
           <tbody>
             {filteredProducts.map((p) => (
               <tr
-                key={p.id}
+                key={p.productid}
                 className="border-t hover:bg-gray-50 transition"
               >
-                <td className="py-2 px-4">{p.id}</td>
-                <td className="py-2 px-4">{p.name}</td>
+                <td className="py-2 px-4">{p.productid}</td>
+                <td className="py-2 px-4">{p.itemName}</td>
                 <td className="py-2 px-4">{p.category}</td>
                 <td className="py-2 px-4">₹{p.price}</td>
                 <td className="py-2 px-4">{p.stock}</td>
@@ -183,13 +171,13 @@ const ViewProducts = () => {
                     <FaEye /> View
                   </button>
                   <button
-                    onClick={() => openModal(p, "edit")}
-                    className="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 flex items-center gap-1"
+                    onClick={() => navigate(`/admin/products/edit/${p.productid}`)}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded"
                   >
-                    <FaEdit /> Edit
+                    Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(p.id)}
+                    onClick={() => handleDelete(p.productid)}
                     className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center gap-1"
                   >
                     <FaTrash /> Delete
@@ -207,7 +195,7 @@ const ViewProducts = () => {
             {modalType === "view" && (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold">{selectedProduct.name}</h3>
+                  <h3 className="text-xl font-bold">{selectedProduct.itemName}</h3>
                   <button
                     onClick={closeModal}
                     className="text-gray-600 hover:text-gray-900 font-bold"
