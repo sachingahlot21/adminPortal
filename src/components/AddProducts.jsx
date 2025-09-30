@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function AddProduct() {
   const navigate = useNavigate();
+  const [errors, setErrors] = useState({})
 
   // sample categories (replace with real source later)
   const categories = [
@@ -40,6 +41,71 @@ export default function AddProduct() {
     colors: [],
     count: 0,
   });
+
+  const validateForm = (form) => {
+    const errors = {};
+
+    if (!form.productid?.trim()) errors.productid = "Product ID is required";
+    if (!form.itemName?.trim()) errors.itemName = "Item name is required";
+    if (!form.description?.trim()) errors.description = "Description is required.";
+    if (!form.price || form.price <= 0) errors.price = "Price must be greater than 0.";
+    if (!form.category?.trim()) errors.category = "Category is required.";
+
+    // Rating validation
+    if (form.rating === "" || form.rating === null) {
+      errors.rating = "Rating is required.";
+    } else if (form.rating < 0 || form.rating > 10) {
+      errors.rating = "Rating must be between 0 and 10.";
+    }
+
+    // Discount validation
+    if (form.discount === "" || form.discount === null) {
+      errors.discount = "Discount is required.";
+    } else if (form.discount < 0 || form.discount > 100) {
+      errors.discount = "Discount must be between 0 and 100.";
+    }
+
+    // USP validation
+    const uspList = form.usps?.filter((u) => u.trim() !== "") || [];
+    if (uspList.length < 1) {
+      errors.usps = "At least one USP is required.";
+    }
+
+    // Colors validation
+
+    if (!form.colors || form.colors.length === 0) {
+      errors.colors = "At least one color is required";
+    } else {
+      form.colors.forEach((c, idx) => {
+        if (!c.colorName?.trim()) {
+          errors[`colorName_${idx}`] = `Color name is required for color ${idx + 1}`;
+        }
+        if (!c.images || c.images.length === 0) {
+          errors[`colorImages_${idx}`] = `At least one image is required for color ${idx + 1}`;
+        }
+      });
+    }
+
+    // Thumbnail validation
+    if (!form.thumbnail) {
+      errors.thumbnail = "Thumbnail image is required.";
+    }
+
+    if (form.priceBefore === "" || form.priceBefore === null) {
+      errors.priceBefore = "Original price is required";
+    } else if (form.priceBefore < 0) {
+      errors.priceBefore = "Original price cannot be negative";
+    }
+
+    // Stock (non-negative)
+    if (form.stock < 0) {
+      errors.stock = "Stock quantity cannot be negative";
+    }
+
+
+    return errors;
+  };
+
 
   // ---------- Helpers ----------
   const calcPriceAfterDiscount = (priceBefore, discount) => {
@@ -105,26 +171,7 @@ export default function AddProduct() {
     if (el) el.click();
   };
 
-  // Handle color image(s) uploaded for a color
-  // const handleColorImageUpload = (index, fileList) => {
 
-  //   console.log(fileList , index)
-  //    console.log(form)
-  //   if (!fileList) return;
-  //   const files = Array.from(fileList);
-  //   console.log("files" , files)
-  //   setForm((p) => {
-  //     const colors = [...p.colors];
-  //     const current = colors[index].images || [];
-  //     console.log("current" , current)
-  //     if (current.length + files.length > 5) {
-  //       alert("Max 5 images allowed per color.");
-  //       return p;
-  //     }
-  //     colors[index].images = [...current, ...files];
-  //     return { ...p, colors };
-  //   });
-  // };
 
   const handleColorImageUpload = (idx, files) => {
     const newColors = [...form.colors];
@@ -147,6 +194,15 @@ export default function AddProduct() {
   // ---------- Submit ----------
   const handleSubmit = (e) => {
     e.preventDefault();
+
+
+    const errors = validateForm(form);
+    setErrors(errors);
+
+    if (Object.keys(errors).length > 0) {
+      // Don’t call API if errors exist
+      return;
+    }
 
     // prepare final product object matching your sample structure
     const product = {
@@ -224,8 +280,8 @@ export default function AddProduct() {
               onChange={handleChange}
               placeholder="e.g. neckBands2"
               className="w-full border p-2 rounded"
-              required
             />
+            {errors.productid && <p className="text-red-500 text-sm">{errors.productid}</p>}
           </div>
 
           <div>
@@ -235,8 +291,8 @@ export default function AddProduct() {
               value={form.itemName}
               onChange={handleChange}
               className="w-full border p-2 rounded"
-              required
             />
+            {errors.itemName && <p className="text-red-500 text-sm">{errors.itemName}</p>}
           </div>
         </div>
 
@@ -249,8 +305,8 @@ export default function AddProduct() {
             onChange={handleChange}
             rows="3"
             className="w-full border p-2 rounded"
-            required
           />
+          {errors.description && <p className="text-red-500 text-sm">{errors.description}</p>}
         </div>
 
         {/* category + rating + sold */}
@@ -262,7 +318,6 @@ export default function AddProduct() {
               value={form.category}
               onChange={handleChange}
               className="w-full border p-2 rounded"
-              required
             >
               <option value="">Select category</option>
               {categories.map((c) => (
@@ -271,6 +326,7 @@ export default function AddProduct() {
                 </option>
               ))}
             </select>
+            {errors.category && <p className="text-red-500 text-sm">{errors.category}</p>}
           </div>
 
           <div>
@@ -282,6 +338,7 @@ export default function AddProduct() {
               placeholder="e.g. 4.8"
               className="w-full border p-2 rounded"
             />
+            {errors.rating && <p className="text-red-500 text-sm">{errors.rating}</p>}
           </div>
 
           <div>
@@ -306,8 +363,8 @@ export default function AddProduct() {
               value={form.priceBefore}
               onChange={handleChange}
               className="w-full border p-2 rounded"
-              required
             />
+            {errors.priceBefore && <p className="text-red-500 text-sm">{errors.priceBefore}</p>}
           </div>
 
           <div>
@@ -319,6 +376,7 @@ export default function AddProduct() {
               onChange={handleChange}
               className="w-full border p-2 rounded"
             />
+            {errors.discount && <p className="text-red-500 text-sm">{errors.discount}</p>}
           </div>
 
           <div>
@@ -359,6 +417,7 @@ export default function AddProduct() {
                 +
               </button>
             </div>
+            {errors.stock && <p className="text-red-500 text-sm">{errors.stock}</p>}
           </div>
 
           <div>
@@ -402,6 +461,7 @@ export default function AddProduct() {
                 )}
               </div>
             ))}
+
           </div>
 
           {/* Add USP Button */}
@@ -413,7 +473,9 @@ export default function AddProduct() {
             >
               + Add USP
             </button>
+
           )}
+          {errors.usps && <p className="text-red-500 text-sm">{errors.usps}</p>}
         </div>
 
 
@@ -465,7 +527,9 @@ export default function AddProduct() {
               >
                 ×
               </button>
+
             </div>
+
           )}
 
           {/* Upload / Change Button */}
@@ -480,6 +544,7 @@ export default function AddProduct() {
               className="hidden"
             />
           </label>
+          {errors.thumbnail && <p className="text-red-500 text-sm mt-1">{errors.thumbnail}</p>}
         </div>
 
 
@@ -510,6 +575,9 @@ export default function AddProduct() {
                       placeholder="e.g. Black"
                       className="w-full border p-2 rounded"
                     />
+                    {errors[`colorName_${idx}`] && (
+                      <p className="text-red-500 text-sm">{errors[`colorName_${idx}`]}</p>
+                    )}
                   </div>
 
                   <div className="flex-shrink-0 flex flex-col items-end gap-2">
@@ -566,9 +634,13 @@ export default function AddProduct() {
                 </div>
 
                 <p className="text-xs text-gray-500 mt-2">Max 5 images per color</p>
+                {errors[`colorImages_${idx}`] && (
+                  <p className="text-red-500 text-sm">{errors[`colorImages_${idx}`]}</p>
+                )}
               </div>
             ))}
           </div>
+          {errors.colors && <p className="text-red-500 text-sm">{errors.colors}</p>}
         </div>
 
         <div className="pt-4 border-t">
